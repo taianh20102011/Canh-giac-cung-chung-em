@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>Tương tác</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="script.js"></script>
+</head>
+<body>
+  <header><h1>💬 Góp ý & Tương tác</h1></header>
+  <nav>
+    <a href="index.html">Trang chủ</a>
+    <a href="chieutro.html">Chiêu trò</a>
+    <a href="5khong5nen.html">5 KHÔNG - 5 NÊN</a>
+    <a href="phanung.html">Phản ứng nhanh</a>
+    <a href="sangtao.html">Sáng tạo</a>
+    <a href="tracnghiem.html">Trắc nghiệm</a>
+    <a href="tuongtac.html">Tương tác</a>
+  </nav>
+
+  <section>
+    <form id="formYKien" onsubmit="guiYKien(event)">
+      <input type="text" id="ten" placeholder="Tên của bạn">
+      <textarea id="ykien" rows="4" placeholder="Nhập ý kiến..."></textarea>
+      <button type="submit">📤 Gửi ý kiến</button>
+    </form>
+    <div id="dsYKien"></div>
+  </section>
+
+  <footer><p>© 2025 - Cảnh giác cùng chúng em</p></footer>
+</body>
+</html>
