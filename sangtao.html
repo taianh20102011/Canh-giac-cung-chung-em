@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Sáng tạo</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+  <header>
+    <h1>🌟 Góc Sáng tạo</h1>
+    <p>Poster, video, ảnh chibi tuyên truyền do học sinh tự thiết kế</p>
+  </header>
+  <nav>
+    <a href="index.html">Trang chủ</a>
+    <a href="chieutro.html">Chiêu trò</a>
+    <a href="5khong5nen.html">5 KHÔNG - 5 NÊN</a>
+    <a href="phanung.html">Phản ứng nhanh</a>
+    <a href="sangtao.html">Sáng tạo</a>
+    <a href="tracnghiem.html">Trắc nghiệm</a>
+    <a href="tuongtac.html">Tương tác</a>
+  </nav>
+
+  <section>
+    <form id="formSangTao">
+      <input type="text" id="tenSangTao" placeholder="Tên của bạn">
+      <textarea id="moTa" rows="3" placeholder="Mô tả ý tưởng"></textarea>
+      <input type="file" id="anh" accept="image/*">
+      <button type="submit">📤 Gửi sáng tạo</button>
+    </form>
+    <div id="dsSangTao"></div>
+  </section>
+
+  <footer>
+    <p>© 2025 - Cảnh giác cùng chúng em</p>
+  </footer>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getDatabase, ref, push, onValue } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+    // 🔑 Config Firebase (bạn nhớ bật Realtime Database trong Firebase Console)
+    const firebaseConfig = {
+      apiKey: "AIzaSyA-w4aviFPK1-wtE_pVN01saRCq5bdgL9c",
+      authDomain: "cungchungemcanhgiac.firebaseapp.com",
+      databaseURL: "https://cungchungemcanhgiac-default-rtdb.firebaseio.com",
+      projectId: "cungchungemcanhgiac",
+      storageBucket: "cungchungemcanhgiac.appspot.com",
+      messagingSenderId: "24327141155",
+      appId: "1:24327141155:web:139b53155d697a7af87e96"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    // 🔄 Chuyển file ảnh sang Base64
+    function fileToBase64(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = reject;
+      });
+    }
+
+    // 📤 Gửi sáng tạo
+    const formST = document.getElementById("formSangTao");
+    formST.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const ten = document.getElementById("tenSangTao").value.trim();
+      const moTa = document.getElementById("moTa").value.trim();
+      const file = document.getElementById("anh").files[0];
+
+      if (!ten || !moTa) {
+        alert("⚠️ Vui lòng nhập tên và mô tả");
+        return;
+      }
+
+      let anhBase64 = "";
+      if (file) {
+        anhBase64 = await fileToBase64(file);
+      }
+
+      push(ref(db, "sang_tao"), {
+        ten,
+        moTa,
+        anhBase64,
+        time: Date.now()
+      });
+
+      formST.reset();
+    });
+
+    // 👀 Hiển thị realtime
+    const dsBox = document.getElementById("dsSangTao");
+    onValue(ref(db, "sang_tao"), (snapshot) => {
+      dsBox.innerHTML = "";
+      const data = snapshot.val();
+      if (!data) return;
+      Object.values(data)
+        .sort((a, b) => b.time - a.time) // mới nhất lên đầu
+        .forEach((d) => {
+          const div = document.createElement("div");
+          div.className = "card";
+          div.innerHTML = `<b>${d.ten}</b>: ${d.moTa}`;
+          if (d.anhBase64) {
+            const img = document.createElement("img");
+            img.src = d.anhBase64;
+            img.style.maxWidth = "100%";
+            img.style.marginTop = "8px";
+            div.appendChild(img);
+          }
+          dsBox.appendChild(div);
+        });
+    });
+  </script>
+</body>
+
+</html>

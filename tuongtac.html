@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>Tương tác</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header><h1>💬 Góp ý & Tương tác</h1></header>
+  <nav>
+    <a href="index.html">Trang chủ</a>
+    <a href="chieutro.html">Chiêu trò</a>
+    <a href="5khong5nen.html">5 KHÔNG - 5 NÊN</a>
+    <a href="phanung.html">Phản ứng nhanh</a>
+    <a href="sangtao.html">Sáng tạo</a>
+    <a href="tracnghiem.html">Trắc nghiệm</a>
+    <a href="tuongtac.html">Tương tác</a>
+  </nav>
+
+  <section>
+    <form id="formYKien">
+      <input type="text" id="ten" placeholder="Tên của bạn">
+      <textarea id="ykien" rows="4" placeholder="Nhập ý kiến..."></textarea>
+      <button type="submit">📤 Gửi ý kiến</button>
+    </form>
+    <div id="dsYKien"></div>
+  </section>
+
+  <!-- Firebase SDK -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { 
+      getFirestore, collection, addDoc, query, orderBy, onSnapshot 
+    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+    // 🔑 Config Firebase (copy đúng từ Project settings)
+    const firebaseConfig = {
+      apiKey: "AIzaSyA-w4aviFPK1-wtE_pVN01saRCq5bdgL9c",
+      authDomain: "cungchungemcanhgiac.firebaseapp.com",
+      projectId: "cungchungemcanhgiac",
+      storageBucket: "cungchungemcanhgiac.appspot.com",
+      messagingSenderId: "24327141155",
+      appId: "1:24327141155:web:139b53155d697a7af87e96"
+    };
+
+    // Khởi tạo Firebase
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    // 📤 Gửi góp ý
+    const form = document.getElementById("formYKien");
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const ten = document.getElementById("ten").value.trim();
+      const ykien = document.getElementById("ykien").value.trim();
+
+      if (ten && ykien) {
+        try {
+          await addDoc(collection(db, "y_kien"), {
+            ten,
+            ykien,
+            time: new Date()
+          });
+          form.reset();
+        } catch (err) {
+          console.error("❌ Lỗi khi lưu Firebase:", err);
+          alert("⚠️ Không thể gửi góp ý!");
+        }
+      } else {
+        alert("⚠️ Vui lòng nhập đầy đủ thông tin.");
+      }
+    });
+
+    // 👀 Hiển thị realtime
+    const dsBox = document.getElementById("dsYKien");
+    const q = query(collection(db, "y_kien"), orderBy("time", "desc"));
+
+    onSnapshot(q, (snapshot) => {
+      dsBox.innerHTML = ""; // Xóa danh sách cũ
+      snapshot.forEach((doc) => {
+        const data = doc.data();
+        const div = document.createElement("div");
+        div.className = "card";
+        const date = data.time?.toDate?.().toLocaleString("vi-VN") || "";
+        div.innerHTML = `<b>${data.ten}:</b> ${data.ykien}<br><small>${date}</small>`;
+        dsBox.appendChild(div);
+      });
+    });
+  </script>
+  <footer><p>© 2025 - Cảnh giác cùng chúng em</p></footer>
+</body>
+</html>
