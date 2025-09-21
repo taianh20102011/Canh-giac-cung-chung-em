@@ -9,5 +9,16 @@ function kiemTraQuiz() {
   document.getElementById("quizResult").innerHTML =
     `✅ Bạn được ${diem}/5 điểm. ${diem >= 4 ? "Xuất sắc! 👏" : "Hãy xem lại kiến thức nhé!"}`;
 }
+// Slideshow ảnh header
+document.addEventListener("DOMContentLoaded", () => {
+  const slides = document.querySelectorAll(".header-slider img");
+  let index = 0;
+
+  setInterval(() => {
+    slides[index].classList.remove("active");
+    index = (index + 1) % slides.length;
+    slides[index].classList.add("active");
+  }, 2500); // đổi ảnh mỗi 1.5 giây
+});
 
 
