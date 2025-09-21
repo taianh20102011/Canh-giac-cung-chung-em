@@ -175,3 +175,30 @@ button::after {
 button:hover::after {
   left: 0;
 }
+/* Header slider */
+.header-slider {
+  position: relative;
+  max-width: 1000px;
+  height: 350px;           /* đặt chiều cao cố định (bạn chỉnh tùy ý) */
+  margin: 20px auto 0;
+  overflow: hidden;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  background: #0077cc;        /* nền để khi ảnh nhỏ hơn không bị trống */
+}
+
+.header-slider img {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  max-width: 100%;
+  max-height: 100%;
+  transform: translate(-50%, -50%);  /* căn giữa ảnh */
+  opacity: 0;
+  transition: opacity 0.7s ease-in-out;
+}
+
+.header-slider img.active {
+  opacity: 1;
+}
+
