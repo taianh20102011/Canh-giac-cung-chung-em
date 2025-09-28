@@ -23,11 +23,12 @@
   </nav>
 
   <section>
-    <!-- Mật khẩu admin -->
+    <!-- Đăng nhập -->
     <div class="card" id="loginCard">
-      <h2>🔐 Chỉ quản trị viên được đăng bài</h2>
-      <input type="password" id="adminPass" placeholder="Nhập mật khẩu..." />
-      <button id="checkPass">Xác nhận</button>
+      <h2>🔑 Đăng nhập quản trị</h2>
+      <input type="email" id="email" placeholder="Email admin" />
+      <input type="password" id="password" placeholder="Mật khẩu" />
+      <button id="loginBtn">Đăng nhập</button>
       <p id="loginMsg" style="color:red;"></p>
     </div>
 
@@ -43,7 +44,7 @@
           <label style="margin-left:15px;"><input type="radio" name="loaiBai" value="ngoai" /> Link ngoài</label>
         </div>
 
-        <!-- Nội dung bài viết -->
+        <!-- Nội bộ -->
         <div id="noiBoFields">
           <textarea id="noiDung" rows="8" placeholder="Nội dung bài báo..."></textarea>
           <input type="file" id="anhBai" accept="image/*" />
@@ -52,7 +53,7 @@
 
         <!-- Link ngoài -->
         <div id="ngoaiFields" style="display:none;">
-          <input type="url" id="linkNgoai" placeholder="Dán link ngoài (ví dụ: https://chinhphu.vn/...)" />
+          <input type="url" id="linkNgoai" placeholder="Dán link ngoài (https://...)" />
         </div>
 
         <div style="margin-top:10px;">
@@ -73,9 +74,7 @@
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
     import { getFirestore, collection, addDoc, query, orderBy, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-
-    // 🔑 Mật khẩu admin
-    const ADMIN_PASS = "canhgiaccungchungem_lytutrong_anhoidong"; // đổi mật khẩu tại đây
+    import { getAuth, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
     // Firebase config
     const firebaseConfig = {
@@ -89,21 +88,34 @@
 
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
+    const auth = getAuth(app);
 
     // DOM
     const loginCard = document.getElementById("loginCard");
     const dangbaiCard = document.getElementById("dangbaiCard");
-    const passInput = document.getElementById("adminPass");
-    const checkPassBtn = document.getElementById("checkPass");
+    const loginBtn = document.getElementById("loginBtn");
     const loginMsg = document.getElementById("loginMsg");
+    const emailEl = document.getElementById("email");
+    const passEl = document.getElementById("password");
 
-    // check pass
-    checkPassBtn.addEventListener("click", () => {
-      if (passInput.value === ADMIN_PASS) {
+    // đăng nhập
+    loginBtn.addEventListener("click", async () => {
+      try {
+        await signInWithEmailAndPassword(auth, emailEl.value, passEl.value);
+        loginMsg.textContent = "✅ Đăng nhập thành công!";
+      } catch (err) {
+        loginMsg.textContent = "❌ Sai tài khoản hoặc mật khẩu!";
+      }
+    });
+
+    // khi login thành công → hiện form đăng bài
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
         loginCard.style.display = "none";
         dangbaiCard.style.display = "block";
       } else {
-        loginMsg.textContent = "❌ Sai mật khẩu!";
+        loginCard.style.display = "block";
+        dangbaiCard.style.display = "none";
       }
     });
 
@@ -112,14 +124,8 @@
     const ngoaiFields = document.getElementById("ngoaiFields");
     document.querySelectorAll('input[name="loaiBai"]').forEach(r => {
       r.addEventListener("change", () => {
-        if (r.value === "noiBo" && r.checked) {
-          noiBoFields.style.display = "block";
-          ngoaiFields.style.display = "none";
-        }
-        if (r.value === "ngoai" && r.checked) {
-          noiBoFields.style.display = "none";
-          ngoaiFields.style.display = "block";
-        }
+        noiBoFields.style.display = r.value === "noiBo" ? "block" : "none";
+        ngoaiFields.style.display = r.value === "ngoai" ? "block" : "none";
       });
     });
 
@@ -193,8 +199,6 @@
         alert("✅ Đăng thành công!");
         form.reset();
         preview.innerHTML = "";
-        noiBoFields.style.display = "block";
-        ngoaiFields.style.display = "none";
       } catch (err) {
         console.error(err);
         alert("❌ Lỗi khi đăng bài!");
