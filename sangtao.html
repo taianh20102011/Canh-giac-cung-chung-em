@@ -1,10 +1,26 @@
 <!DOCTYPE html>
 <html lang="vi">
-
 <head>
   <meta charset="UTF-8">
   <title>Sáng tạo</title>
   <link rel="stylesheet" href="style.css">
+  <style>
+    /* Loader animation */
+    .loader {
+      width: 60px;
+      height: 60px;
+      border: 6px solid #ddd;
+      border-top-color: #514b82;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin: 20px auto;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    .hidden { display: none !important; }
+    .center { text-align: center; }
+  </style>
 </head>
 
 <body>
@@ -29,7 +45,10 @@
       <textarea id="moTa" rows="3" placeholder="Mô tả ý tưởng"></textarea>
       <input type="file" id="anh" accept="image/*">
       <button type="submit">📤 Gửi sáng tạo</button>
+      <div id="submitLoader" class="loader hidden"></div>
     </form>
+
+    <div id="listLoader" class="loader"></div>
     <div id="dsSangTao"></div>
   </section>
 
@@ -41,7 +60,6 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
     import { getDatabase, ref, push, onValue } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-    // 🔑 Config Firebase (bạn nhớ bật Realtime Database trong Firebase Console)
     const firebaseConfig = {
       apiKey: "AIzaSyA-w4aviFPK1-wtE_pVN01saRCq5bdgL9c",
       authDomain: "cungchungemcanhgiac.firebaseapp.com",
@@ -55,7 +73,7 @@
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
 
-    // 🔄 Chuyển file ảnh sang Base64
+    // Convert file → Base64
     function fileToBase64(file) {
       return new Promise((resolve, reject) => {
         const reader = new FileReader();
@@ -65,8 +83,12 @@
       });
     }
 
-    // 📤 Gửi sáng tạo
     const formST = document.getElementById("formSangTao");
+    const submitLoader = document.getElementById("submitLoader");
+    const listLoader = document.getElementById("listLoader");
+    const dsBox = document.getElementById("dsSangTao");
+
+    // 📤 Gửi sáng tạo
     formST.addEventListener("submit", async (e) => {
       e.preventDefault();
       const ten = document.getElementById("tenSangTao").value.trim();
@@ -78,29 +100,43 @@
         return;
       }
 
-      let anhBase64 = "";
-      if (file) {
-        anhBase64 = await fileToBase64(file);
+      submitLoader.classList.remove("hidden");
+
+      try {
+        let anhBase64 = "";
+        if (file) {
+          anhBase64 = await fileToBase64(file);
+        }
+
+        await push(ref(db, "sang_tao"), {
+          ten,
+          moTa,
+          anhBase64,
+          time: Date.now()
+        });
+
+        formST.reset();
+      } catch (err) {
+        console.error("❌ Lỗi khi lưu:", err);
+        alert("⚠️ Không thể gửi sáng tạo!");
+      } finally {
+        submitLoader.classList.add("hidden");
       }
-
-      push(ref(db, "sang_tao"), {
-        ten,
-        moTa,
-        anhBase64,
-        time: Date.now()
-      });
-
-      formST.reset();
     });
 
     // 👀 Hiển thị realtime
-    const dsBox = document.getElementById("dsSangTao");
     onValue(ref(db, "sang_tao"), (snapshot) => {
       dsBox.innerHTML = "";
+      listLoader.classList.add("hidden");
+
       const data = snapshot.val();
-      if (!data) return;
+      if (!data) {
+        dsBox.innerHTML = "<p class='center'>Chưa có sáng tạo nào.</p>";
+        return;
+      }
+
       Object.values(data)
-        .sort((a, b) => b.time - a.time) // mới nhất lên đầu
+        .sort((a, b) => b.time - a.time)
         .forEach((d) => {
           const div = document.createElement("div");
           div.className = "card";
@@ -117,8 +153,4 @@
     });
   </script>
 </body>
-
-
 </html>
-
-
