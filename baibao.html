@@ -4,25 +4,65 @@
   <meta charset="UTF-8">
   <title>Bài báo - Cảnh giác cùng chúng em</title>
   <link rel="stylesheet" href="style.css">
+  <style>
+    /* Loader animation */
+    .loader {
+      width: 120px;
+      height: 22px;
+      border-radius: 40px;
+      color: #514b82;
+      border: 2px solid;
+      position: relative;
+      overflow: hidden;
+      margin: 30px auto; /* căn giữa */
+    }
+    .loader::before {
+      content: "";
+      position: absolute;
+      margin: 2px;
+      width: 14px;
+      top: 0;
+      bottom: 0;
+      left: -20px;
+      border-radius: inherit;
+      background: currentColor;
+      box-shadow: -10px 0 12px 3px currentColor;
+      clip-path: polygon(0 5%, 100% 0, 100% 100%, 0 95%, -30px 50%);
+      animation: l14 1s infinite linear;
+    }
+    @keyframes l14 {
+      100% {
+        left: calc(100% + 20px);
+      }
+    }
+
+    /* Hiệu ứng fade-in */
+    .fade-in {
+      opacity: 0;
+      transform: translateY(10px);
+      animation: fadeInUp 0.6s ease forwards;
+    }
+    @keyframes fadeInUp {
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+  </style>
 </head>
 <body>
   <header>
     <h1>📰 Bài báo chi tiết</h1>
     <nav>
-    <a href="index.html">Trang chủ</a>
-    <a href="chieutro.html">Chiêu trò</a>
-    <a href="5khong5nen.html">5 KHÔNG - 5 NÊN</a>
-    <a href="phanung.html">Phản ứng nhanh</a>
-    <a href="sangtao.html">Sáng tạo</a>
-    <a href="tracnghiem.html">Trắc nghiệm</a>
-    <a href="tuongtac.html">Tương tác</a>
-    <a href="dangbai.html">Đăng bài</a>
+      <a href="index.html">Trang chủ</a>
+      <a href="dangbai.html">Đăng bài</a>
     </nav>
   </header>
 
   <section>
     <div class="card" id="baibaoCard">
-      <p>⏳ Đang tải nội dung...</p>
+      <div class="loader"></div>
+      <p style="text-align:center;color:#555;">Đang tải nội dung...</p>
     </div>
   </section>
 
@@ -50,7 +90,6 @@
     // Lấy id từ URL
     const params = new URLSearchParams(window.location.search);
     const id = params.get("id");
-
     const baibaoCard = document.getElementById("baibaoCard");
 
     async function loadBaiBao() {
@@ -72,7 +111,9 @@
 
         let html = `
           <h2>${data.tieuDe}</h2>
-          <small>✍️ ${data.tacGia || "Bạn đọc"} — ${data.time?.toDate ? data.time.toDate().toLocaleString("vi-VN") : ""}</small>
+          <small>✍️ ${data.tacGia || "Bạn đọc"} — ${
+            data.time?.toDate ? data.time.toDate().toLocaleString("vi-VN") : ""
+          }</small>
         `;
 
         if (data.anhBase64) {
@@ -83,7 +124,8 @@
           html += `<p style="white-space:pre-wrap;">${escapeHtml(data.noiDung)}</p>`;
         }
 
-        baibaoCard.innerHTML = html;
+        // Ghi đè loader bằng nội dung + hiệu ứng
+        baibaoCard.innerHTML = `<div class="fade-in">${html}</div>`;
       } catch (err) {
         console.error(err);
         baibaoCard.innerHTML = "<p>❌ Lỗi khi tải bài báo.</p>";
@@ -91,7 +133,11 @@
     }
 
     function escapeHtml(t) {
-      return t ? t.replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;") : "";
+      return t
+        ? t.replaceAll("&", "&amp;")
+             .replaceAll("<", "&lt;")
+             .replaceAll(">", "&gt;")
+        : "";
     }
 
     loadBaiBao();
