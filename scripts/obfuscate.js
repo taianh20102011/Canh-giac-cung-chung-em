@@ -1,17 +1,23 @@
 /**
- * scripts/obfuscate.js
- * Usage: node scripts/obfuscate.js
- * This script recursively obfuscates .js files under the `dist` folder
- * and writes output to `dist-obf`.
+ * scripts/obfuscate.js  (CommonJS)
  *
- * IMPORTANT:
- * - Make sure you already ran your normal build (e.g. `npm run build`) which outputs to `dist/`.
- * - This script will copy non-js files (html, css, images) as-is.
+ * Usage:
+ *   1. npm install --save-dev javascript-obfuscator
+ *   2. Run your normal build so that `dist/` exists (e.g. `npm run build`)
+ *   3. node scripts/obfuscate.js
+ *
+ * Result:
+ *   - Creates (or replaces) folder `dist-obf/` with obfuscated JS files
+ *   - Copies non-JS assets (HTML, CSS, images) as-is
+ *
+ * Notes:
+ *   - This script tries to avoid options that require 'unsafe-eval' in CSP.
+ *   - Do NOT store secrets (API keys) in client-side files.
  */
 
-import fs from 'fs';
-import path from 'path';
-import { obfuscate } from 'javascript-obfuscator';
+const fs = require('fs');
+const path = require('path');
+const JavaScriptObfuscator = require('javascript-obfuscator');
 
 const SRC_DIR = path.resolve(process.cwd(), 'dist');
 const OUT_DIR = path.resolve(process.cwd(), 'dist-obf');
@@ -23,10 +29,9 @@ function ensureDir(dir) {
 function obfuscateJsFile(srcPath, outPath) {
   const code = fs.readFileSync(srcPath, 'utf8');
 
-  // Obfuscator options: balanced for security vs performance & CSP compatibility.
   const obfOptions = {
     compact: true,
-    controlFlowFlattening: false,        // set true only if you accept larger bundle and CPU cost
+    controlFlowFlattening: false,        // false = safer for perf; set true if you accept bigger bundle & CPU cost
     controlFlowFlatteningThreshold: 0.75,
     stringArray: true,
     stringArrayThreshold: 0.75,
@@ -34,12 +39,12 @@ function obfuscateJsFile(srcPath, outPath) {
     rotateStringArray: true,
     transformObjectKeys: false,
     disableConsoleOutput: true,
-    selfDefending: false,                // true can break some environments and increase size
-    // Avoid settings that commonly require unsafe-eval in CSP.
-    // Keep evalUsage minimal to not require 'unsafe-eval' in CSP.
+    selfDefending: false,                // true increases size / fragility; set true only if needed
+    // Avoid options that inject eval/new Function heavily to stay CSP friendly
   };
 
-  const obfuscated = obfuscate(code, obfOptions).getObfuscatedCode();
+  const obfuscated = JavaScriptObfuscator.obfuscate(code, obfOptions).getObfuscatedCode();
+  ensureDir(path.dirname(outPath));
   fs.writeFileSync(outPath, obfuscated, 'utf8');
   console.log('[obf] ', path.relative(process.cwd(), outPath));
 }
@@ -59,7 +64,6 @@ function processEntry(srcRoot, relPath = '') {
   } else {
     const ext = path.extname(fullPath).toLowerCase();
     const outPath = path.join(OUT_DIR, relPath);
-    ensureDir(path.dirname(outPath));
     if (ext === '.js') {
       obfuscateJsFile(fullPath, outPath);
     } else {
@@ -74,15 +78,26 @@ function main() {
     console.error('Run your build first (e.g. npm run build) so that "dist/" exists.');
     process.exit(2);
   }
-  // Clean outDir
+
+  // Remove old output if exists
   if (fs.existsSync(OUT_DIR)) {
-    fs.rmSync(OUT_DIR, { recursive: true, force: true });
+    try {
+      fs.rmSync(OUT_DIR, { recursive: true, force: true });
+    } catch (err) {
+      console.warn('Could not remove old dist-obf (try manual cleanup):', err.message);
+    }
   }
+
   ensureDir(OUT_DIR);
 
   console.log('Obfuscating from', SRC_DIR, '->', OUT_DIR);
-  processEntry(SRC_DIR);
-  console.log('Done. Deploy', OUT_DIR, 'to Vercel or test locally.');
+  try {
+    processEntry(SRC_DIR);
+    console.log('Done. Deploy', OUT_DIR, 'to Vercel or test locally.');
+  } catch (err) {
+    console.error('Error during obfuscation:', err);
+    process.exit(1);
+  }
 }
 
 main();
