@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!-- <!DOCTYPE html>
 <html lang="vi">
 <head>
   <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'nonce-abc123' https://www.gstatic.com https://www.googleapis.com;">
@@ -302,3 +302,123 @@
 </html>
 
 
+ -->
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'nonce-abc123' https://www.gstatic.com https://www.googleapis.com;">
+  <meta charset="utf-8" />
+  <title>Đăng bài - Cảnh giác cùng chúng em</title>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    /* Loader animation */
+    .loader {
+      width: 120px;
+      height: 22px;
+      border-radius: 40px;
+      color: #514b82;
+      border: 2px solid;
+      position: relative;
+      overflow: hidden;
+      margin: 20px auto;
+    }
+    .loader::before {
+      content: "";
+      position: absolute;
+      margin: 2px;
+      width: 14px;
+      top: 0;
+      bottom: 0;
+      left: -20px;
+      border-radius: inherit;
+      background: currentColor;
+      box-shadow: -10px 0 12px 3px currentColor;
+      clip-path: polygon(0 5%, 100% 0, 100% 100%, 0 95%, -30px 50%);
+      animation: l14 1s infinite linear;
+    }
+    @keyframes l14 {
+      100% {
+        left: calc(100% + 20px);
+      }
+    }
+    .hidden {
+      display: none !important;
+    }
+    .center {
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>📝 Góc Báo chí học sinh</h1>
+    <p>Chia sẻ thông tin và tuyên truyền</p>
+  </header>
+
+  <nav>
+    <a href="index.html">Trang chủ</a>
+    <a href="chieutro.html">Thủ đoạn</a>
+    <a href="5khong5nen.html">5 KHÔNG - 5 NÊN</a>
+    <a href="phanung.html">Phản ứng nhanh</a>
+    <a href="sangtao.html">Sáng tạo</a>
+    <a href="tracnghiem.html">Trắc nghiệm</a>
+    <a href="tuongtac.html">Tương tác</a>
+    <a href="dangbai.html">Đăng bài</a>
+  </nav>
+
+  <section>
+    <!-- Đăng nhập -->
+    <div class="card" id="loginCard">
+      <h2>🔑 Đăng nhập quản trị</h2>
+      <input type="email" id="email" placeholder="Email admin" />
+      <input type="password" id="password" placeholder="Mật khẩu" />
+      <button id="loginBtn">Đăng nhập</button>
+      <div id="loginLoader" class="loader hidden"></div>
+      <p id="loginMsg" class="center" style="color:red;"></p>
+    </div>
+
+    <!-- Form đăng bài -->
+    <div class="card" id="dangbaiCard" style="display:none;">
+      <h2>📤 Viết bài mới</h2>
+      <form id="formDangBai">
+        <input type="text" id="tieuDe" placeholder="Tiêu đề" required />
+        <input type="text" id="tacGia" placeholder="Tên tác giả" />
+
+        <div style="margin:10px 0;">
+          <label><input type="radio" name="loaiBai" value="noiBo" checked /> Bài viết nội bộ</label>
+          <label style="margin-left:15px;"><input type="radio" name="loaiBai" value="ngoai" /> Link ngoài</label>
+        </div>
+
+        <!-- Nội bộ -->
+        <div id="noiBoFields">
+          <textarea id="noiDung" rows="8" placeholder="Nội dung bài báo..."></textarea>
+          <input type="file" id="anhBai" accept="image/*" />
+          <div id="preview" style="margin-top:12px;"></div>
+        </div>
+
+        <!-- Link ngoài -->
+        <div id="ngoaiFields" style="display:none;">
+          <input type="url" id="linkNgoai" placeholder="Dán link ngoài (https://...)" />
+        </div>
+
+        <div style="margin-top:10px;">
+          <button type="submit">📌 Đăng bài</button>
+          <div id="submitLoader" class="loader hidden"></div>
+        </div>
+      </form>
+    </div>
+
+    <!-- Danh sách bài -->
+    <div class="card">
+      <h2>📰 Danh sách bài báo</h2>
+      <div id="listLoader" class="loader"></div>
+      <div id="dsBai"></div>
+    </div>
+  </section>
+
+  <footer><p>© 2025 - Cảnh giác cùng chúng em</p></footer>
+
+  <!-- Nhúng file JS bên ngoài, có nonce trùng khớp với CSP -->
+  <script type="module" nonce="abc123" src="dangbai.js"></script>
+</body>
+</html>
