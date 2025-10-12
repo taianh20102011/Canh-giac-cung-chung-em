@@ -1,0 +1,32 @@
+// import { NextResponse } from 'next/server'
+// import type { NextRequest } from 'next/server'
+
+// // Bộ nhớ tạm tại Edge (dùng Map trong demo, production nên dùng Upstash Redis)
+// const ipRequestCount = new Map<string, { count: number; time: number }>()
+
+// export async function middleware(req: NextRequest) {
+//   const ip = req.ip || req.headers.get('x-forwarded-for') || 'unknown'
+//   const currentTime = Date.now()
+
+//   const info = ipRequestCount.get(ip)
+//   if (info) {
+//     // Reset mỗi 10 giây
+//     if (currentTime - info.time < 10000) {
+//       info.count++
+//       if (info.count > 20) {
+//         return new Response('🚫 Too many requests — please slow down', { status: 429 })
+//       }
+//     } else {
+//       ipRequestCount.set(ip, { count: 1, time: currentTime })
+//     }
+//   } else {
+//     ipRequestCount.set(ip, { count: 1, time: currentTime })
+//   }
+
+//   return NextResponse.next()
+// }
+
+// // Áp dụng middleware cho toàn bộ trang hoặc chỉ /api
+// export const config = {
+//   matcher: ['/api/:path*', '/contact', '/login'],
+// }
