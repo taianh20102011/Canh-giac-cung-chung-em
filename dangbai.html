@@ -5,10 +5,11 @@
 <meta http-equiv="Content-Security-Policy"
   content="
     default-src 'self';
-    script-src 'self' 'nonce-abc123' https://www.gstatic.com https://www.googleapis.com;
-    connect-src 'self' https://securetoken.googleapis.com https://www.googleapis.com https://firestore.googleapis.com;
+    script-src 'self' https://www.gstatic.com https://www.googleapis.com;
+    connect-src 'self' https://firestore.googleapis.com https://www.googleapis.com https://www.gstatic.com;
+    img-src 'self' data: https:;
     style-src 'self' 'unsafe-inline';
-    img-src 'self' data:;
+    font-src 'self' https://fonts.gstatic.com data:;
   ">
   <meta charset="utf-8" />
   <title>Đăng bài - Cảnh giác cùng chúng em</title>
@@ -125,6 +126,7 @@
   <script type="module" nonce="abc123" src="scripts/dangbai.js"></script>
 </body>
 </html>
+
 
 
 
