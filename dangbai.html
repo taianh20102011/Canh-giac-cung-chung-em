@@ -2,7 +2,14 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-<meta http-equiv="Content-Security-Policy" content="script-src 'self' https://www.gstatic.com https://www.googleapis.com https://yourcdn.com;">
+<meta http-equiv="Content-Security-Policy"
+  content="
+    default-src 'self';
+    script-src 'self' 'nonce-abc123' https://www.gstatic.com https://www.googleapis.com;
+    connect-src 'self' https://securetoken.googleapis.com https://www.googleapis.com https://firestore.googleapis.com;
+    style-src 'self' 'unsafe-inline';
+    img-src 'self' data:;
+  ">
   <meta charset="utf-8" />
   <title>Đăng bài - Cảnh giác cùng chúng em</title>
   <link rel="stylesheet" href="style.css" />
@@ -118,6 +125,7 @@
   <script type="module" nonce="abc123" src="scripts/dangbai.js"></script>
 </body>
 </html>
+
 
 
 
