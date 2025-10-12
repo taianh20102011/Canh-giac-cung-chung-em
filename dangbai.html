@@ -112,7 +112,7 @@
 
   <footer><p>© 2025 - Cảnh giác cùng chúng em</p></footer>
 
-  <script type="module">
+  <script type="module" nonce="abc123">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
     import { getFirestore, collection, addDoc, query, orderBy, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
     import { getAuth, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
@@ -300,4 +300,5 @@
   </script>
 </body>
 </html>
+
 
