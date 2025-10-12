@@ -1,32 +1,305 @@
-// import { NextResponse } from 'next/server'
-// import type { NextRequest } from 'next/server'
+<!-- <!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'nonce-abc123' https://www.gstatic.com https://www.googleapis.com;">
+  <title>Đăng bài - Cảnh giác cùng chúng em</title>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    /* Loader animation */
+    .loader {
+      width: 120px;
+      height: 22px;
+      border-radius: 40px;
+      color: #514b82;
+      border: 2px solid;
+      position: relative;
+      overflow: hidden;
+      margin: 20px auto;
+    }
+    .loader::before {
+      content: "";
+      position: absolute;
+      margin: 2px;
+      width: 14px;
+      top: 0;
+      bottom: 0;
+      left: -20px;
+      border-radius: inherit;
+      background: currentColor;
+      box-shadow: -10px 0 12px 3px currentColor;
+      clip-path: polygon(0 5%, 100% 0, 100% 100%, 0 95%, -30px 50%);
+      animation: l14 1s infinite linear;
+    }
+    @keyframes l14 {
+      100% {
+        left: calc(100% + 20px);
+      }
+    }
+    .hidden {
+      display: none !important;
+    }
+    .center {
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>📝 Góc Báo chí học sinh</h1>
+    <p>Chia sẻ thông tin và tuyên truyền</p>
+  </header>
 
-// // Bộ nhớ tạm tại Edge (dùng Map trong demo, production nên dùng Upstash Redis)
-// const ipRequestCount = new Map<string, { count: number; time: number }>()
+  <nav>
+    <a href="index.html">Trang chủ</a>
+    <a href="chieutro.html">Thủ đoạn</a>
+    <a href="5khong5nen.html">5 KHÔNG - 5 NÊN</a>
+    <a href="phanung.html">Phản ứng nhanh</a>
+    <a href="sangtao.html">Sáng tạo</a>
+    <a href="tracnghiem.html">Trắc nghiệm</a>
+    <a href="tuongtac.html">Tương tác</a>
+    <a href="dangbai.html">Đăng bài</a>
+  </nav>
 
-// export async function middleware(req: NextRequest) {
-//   const ip = req.ip || req.headers.get('x-forwarded-for') || 'unknown'
-//   const currentTime = Date.now()
+  <section>
+    <!-- Đăng nhập -->
+    <div class="card" id="loginCard">
+      <h2>🔑 Đăng nhập quản trị</h2>
+      <input type="email" id="email" placeholder="Email admin" />
+      <input type="password" id="password" placeholder="Mật khẩu" />
+      <button id="loginBtn">Đăng nhập</button>
+      <div id="loginLoader" class="loader hidden"></div>
+      <p id="loginMsg" class="center" style="color:red;"></p>
+    </div>
 
-//   const info = ipRequestCount.get(ip)
-//   if (info) {
-//     // Reset mỗi 10 giây
-//     if (currentTime - info.time < 10000) {
-//       info.count++
-//       if (info.count > 20) {
-//         return new Response('🚫 Too many requests — please slow down', { status: 429 })
-//       }
-//     } else {
-//       ipRequestCount.set(ip, { count: 1, time: currentTime })
-//     }
-//   } else {
-//     ipRequestCount.set(ip, { count: 1, time: currentTime })
-//   }
+    <!-- Form đăng bài -->
+    <div class="card" id="dangbaiCard" style="display:none;">
+      <h2>📤 Viết bài mới</h2>
+      <form id="formDangBai">
+        <input type="text" id="tieuDe" placeholder="Tiêu đề" required />
+        <input type="text" id="tacGia" placeholder="Tên tác giả" />
 
-//   return NextResponse.next()
-// }
+        <div style="margin:10px 0;">
+          <label><input type="radio" name="loaiBai" value="noiBo" checked /> Bài viết nội bộ</label>
+          <label style="margin-left:15px;"><input type="radio" name="loaiBai" value="ngoai" /> Link ngoài</label>
+        </div>
 
-// // Áp dụng middleware cho toàn bộ trang hoặc chỉ /api
-// export const config = {
-//   matcher: ['/api/:path*', '/contact', '/login'],
-// }
+        <!-- Nội bộ -->
+        <div id="noiBoFields">
+          <textarea id="noiDung" rows="8" placeholder="Nội dung bài báo..."></textarea>
+          <input type="file" id="anhBai" accept="image/*" />
+          <div id="preview" style="margin-top:12px;"></div>
+        </div>
+
+        <!-- Link ngoài -->
+        <div id="ngoaiFields" style="display:none;">
+          <input type="url" id="linkNgoai" placeholder="Dán link ngoài (https://...)" />
+        </div>
+
+        <div style="margin-top:10px;">
+          <button type="submit">📌 Đăng bài</button>
+          <div id="submitLoader" class="loader hidden"></div>
+        </div>
+      </form>
+    </div>
+
+    <!-- Danh sách bài -->
+    <div class="card">
+      <h2>📰 Danh sách bài báo</h2>
+      <div id="listLoader" class="loader"></div>
+      <div id="dsBai"></div>
+    </div>
+  </section>
+
+  <footer><p>© 2025 - Cảnh giác cùng chúng em</p></footer>
+
+  <script type="module" nonce="abc123">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getFirestore, collection, addDoc, query, orderBy, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+    import { getAuth, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+    // Firebase config
+    const firebaseConfig = {
+      apiKey: "AIzaSyA-w4aviFPK1-wtE_pVN01saRCq5bdgL9c",
+      authDomain: "cungchungemcanhgiac.firebaseapp.com",
+      projectId: "cungchungemcanhgiac",
+      storageBucket: "cungchungemcanhgiac.appspot.com",
+      messagingSenderId: "24327141155",
+      appId: "1:24327141155:web:139b53155d697a7af87e96"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const auth = getAuth(app);
+
+    // DOM
+    const loginCard = document.getElementById("loginCard");
+    const dangbaiCard = document.getElementById("dangbaiCard");
+    const loginBtn = document.getElementById("loginBtn");
+    const loginMsg = document.getElementById("loginMsg");
+    const emailEl = document.getElementById("email");
+    const passEl = document.getElementById("password");
+    const loginLoader = document.getElementById("loginLoader");
+    const submitLoader = document.getElementById("submitLoader");
+    const listLoader = document.getElementById("listLoader");
+
+    // đăng nhập
+    loginBtn.addEventListener("click", async () => {
+      loginLoader.classList.remove("hidden");
+      loginMsg.textContent = "Đang đăng nhập...";
+      try {
+        await signInWithEmailAndPassword(auth, emailEl.value, passEl.value);
+        loginMsg.style.color = "green";
+        loginMsg.textContent = "✅ Đăng nhập thành công!";
+      } catch (err) {
+        loginMsg.style.color = "red";
+        loginMsg.textContent = "❌ Sai tài khoản hoặc mật khẩu!";
+      } finally {
+        loginLoader.classList.add("hidden");
+      }
+    });
+
+    // khi login thành công → hiện form đăng bài
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        loginCard.style.display = "none";
+        dangbaiCard.style.display = "block";
+      } else {
+        loginCard.style.display = "block";
+        dangbaiCard.style.display = "none";
+      }
+    });
+
+    // toggle loại bài
+    const noiBoFields = document.getElementById("noiBoFields");
+    const ngoaiFields = document.getElementById("ngoaiFields");
+    document.querySelectorAll('input[name="loaiBai"]').forEach(r => {
+      r.addEventListener("change", () => {
+        noiBoFields.style.display = r.value === "noiBo" ? "block" : "none";
+        ngoaiFields.style.display = r.value === "ngoai" ? "block" : "none";
+      });
+    });
+
+    // helper: file -> base64
+    function fileToBase64(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+    }
+
+    // form submit
+    const form = document.getElementById("formDangBai");
+    const tieuDeEl = document.getElementById("tieuDe");
+    const tacGiaEl = document.getElementById("tacGia");
+    const noiDungEl = document.getElementById("noiDung");
+    const anhEl = document.getElementById("anhBai");
+    const preview = document.getElementById("preview");
+    const dsBai = document.getElementById("dsBai");
+
+    anhEl.addEventListener("change", async () => {
+      preview.innerHTML = "";
+      if (anhEl.files[0]) {
+        const b64 = await fileToBase64(anhEl.files[0]);
+        const img = document.createElement("img");
+        img.src = b64;
+        img.style.maxWidth = "200px";
+        preview.appendChild(img);
+      }
+    });
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      submitLoader.classList.remove("hidden");
+
+      const tieuDe = tieuDeEl.value.trim();
+      const tacGia = tacGiaEl.value.trim() || "Bạn đọc";
+      const loai = document.querySelector('input[name="loaiBai"]:checked').value;
+
+      let noiDung = "";
+      let anhBase64 = "";
+      let linkNgoai = "";
+
+      if (loai === "noiBo") {
+        noiDung = noiDungEl.value.trim();
+        if (!noiDung) {
+          alert("Vui lòng nhập nội dung.");
+          submitLoader.classList.add("hidden");
+          return;
+        }
+        if (anhEl.files[0]) {
+          anhBase64 = await fileToBase64(anhEl.files[0]);
+        }
+      } else if (loai === "ngoai") {
+        linkNgoai = document.getElementById("linkNgoai").value.trim();
+        if (!linkNgoai) {
+          alert("Vui lòng nhập link ngoài.");
+          submitLoader.classList.add("hidden");
+          return;
+        }
+      }
+
+      try {
+        await addDoc(collection(db, "bai_bao"), {
+          tieuDe,
+          tacGia,
+          noiDung,
+          anhBase64,
+          linkNgoai,
+          loai,
+          time: new Date()
+        });
+        alert("✅ Đăng thành công!");
+        form.reset();
+        preview.innerHTML = "";
+      } catch (err) {
+        console.error(err);
+        alert("❌ Lỗi khi đăng bài!");
+      } finally {
+        submitLoader.classList.add("hidden");
+      }
+    });
+
+    // hiển thị danh sách
+    const q = query(collection(db, "bai_bao"), orderBy("time", "desc"));
+    onSnapshot(q, (snapshot) => {
+      dsBai.innerHTML = "";
+      if (snapshot.empty) {
+        listLoader.classList.add("hidden");
+        dsBai.innerHTML = "<p>Chưa có bài báo nào.</p>";
+        return;
+      }
+      listLoader.classList.add("hidden");
+      snapshot.forEach((doc) => {
+        const data = doc.data();
+        const timeStr = data.time?.toDate ? data.time.toDate().toLocaleString("vi-VN") : "";
+        let link = "";
+        let icon = data.loai === "ngoai" ? "🔗" : "📄";
+
+        if (data.loai === "ngoai" && data.linkNgoai) {
+          link = `<a href="${data.linkNgoai}" target="_blank">${escapeHtml(data.tieuDe || "")}</a>`;
+        } else {
+          link = `<a href="baibao.html?id=${doc.id}">${escapeHtml(data.tieuDe || "")}</a>`;
+        }
+
+        const card = document.createElement("div");
+        card.className = "card";
+        card.innerHTML = `
+          <h3>${icon} ${link}</h3>
+          <small>✍️ ${escapeHtml(data.tacGia || "")} — ${timeStr}</small>
+          <p style="white-space:pre-wrap;">${escapeHtml((data.noiDung || "").slice(0, 200))}</p>
+        `;
+        dsBai.appendChild(card);
+      });
+    });
+
+    function escapeHtml(t) {
+      return t ? t.replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;") : "";
+    }
+  </script>
+</body>
+</html>
+
+
+ -->
